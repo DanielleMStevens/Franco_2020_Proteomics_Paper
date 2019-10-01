@@ -1,11 +1,13 @@
 #-----------------------------------------------------------------------------------------------
 # Coaker Lab - Plant Pathology Department UC Davis
 # Author: Danielle M. Stevens
-# Last Updated: 9/23/19
-# Script Purpose: Plotting Signifcant Go-terms from proteomics data to assess redundancy
-# Inputs Necessary: Excel file with signficant go terms, protein id, child and parent go-terms
+# Last Updated: 10/1/19
+# Script Purpose: Plotting Signifcant Go-terms from proteomics data to assess redundancy; plot final heatmap
+# Inputs Necessary: Excel file with signficant go terms, protein id, child and parent go-terms, z-scores
 # Outputs: Visualization of comparsion between go-terms called
 #-----------------------------------------------------------------------------------------------
+
+#library packages need to load
 library(RColorBrewer)
 library(readxl)
 library(tidyversee)
@@ -22,16 +24,14 @@ library(circlize)
 library(rafalib)
 library(ggplot2)
 
+#choose go-terms file to process
 file_to_open <- file.choose()
 upregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
 downregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=3, col_names = TRUE))
 upregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
 downregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=4, col_names = TRUE))
 
-#heatmap_values <- heatmap_values[order(heatmap_values$`LFQ intensity GC11_Uninfected`, decreasing = T),]
-
-#testing <- melt(heatmap_values, id = c("Fasta headers"))
-
+#ignore for now - old ploting method for dendrogram
 #hv <- as.matrix(heatmap_values[,2:9])
 #d <- dist(scale(t(hv)))
 #h.clust.d <- hclust(d)
@@ -46,7 +46,7 @@ downregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=4, col_names =
 #rownames_in_order <- rownames_in_order[h.clust.d2$order]
 #hv <- cbind(rownames_in_order,hv)3testing <- melt(hv, id = c("rownames_in_order"))
 
-
+#function to convert \t into underscores
 remove_tabs <- function(n){
   for (i in 1:nrow(n)){
     n[i,4] <- gsub("\t","_",n[i,4])
@@ -78,7 +78,7 @@ remove_tabs(downregulated_bio)
 remove_tabs(upregulated_mol)
 remove_tabs(downregulated_mol)
 
-
+# process and rewrite new file (excel) with go terms by number of hits by phytozome identifier
 counts_upregulated_mol <- as.data.frame(table(upregulated_mol$`Protein Phytozome identifier`))
 counts_upregulated_mol <- counts_upregulated_mol[order(table(upregulated_mol$`Protein Phytozome identifier`), decreasing = T),]
 counts_upregulated_mol$Var1 <- as.character(counts_upregulated_mol$Var1)
@@ -207,7 +207,7 @@ upregulated_mol_counts <- grid.arrange(upregulated_mol_parent, upregulated_mol_c
                                          heights = c(0.4,1))
 
 ggsave(filename = "Upregulated_mol_counts.jpg", plot = upregulated_mol_counts, width = 32, height = 20, units = "in", dpi = 400)
-
+dev.off()
 
 #################### upregulated mol function go terms
 fasta_names_downregulated_mol <- downregulated_mol[order(fct_infreq(downregulated_mol$`Protein Phytozome identifier`)),c(1,4)]
@@ -241,7 +241,7 @@ downregulated_mol_counts <- grid.arrange(downregulated_mol_parent, downregulated
                                        heights = c(0.4,1))
 
 ggsave(filename = "Downregulated_mol_counts.jpg", plot = downregulated_mol_counts, width = 32, height = 20, units = "in", dpi = 400)
-
+dev.off()
 
 ######################--------------------filtered go terms
 
