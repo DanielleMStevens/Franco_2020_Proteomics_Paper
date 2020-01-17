@@ -9,20 +9,47 @@
 
 #library packages need to load
 library(RColorBrewer)
+library(extrafont)
+font_import()
+loadfonts(device = "win")
+#windowsFonts()
+library(sysfonts)
+library(showtext)
 library(readxl)
-library(tidyversee)
+library(rlang)
+library(tidyverse)
 library(plyr)
 library(magrittr)
 library(dplyr)
+library(xlsx)
+library(cowplot)
+library(grid)
 library(forcats)
 library(stringr)
+library(caTools)
 library(gplots)
 library(remotes)
 library(reshape2)
 library(gridExtra)
 library(circlize)
 library(rafalib)
+library(scales)
 library(ggplot2)
+library(Rcpp)
+library(devtools)
+library(ComplexHeatmap)
+#install_github("jokergoo/ComplexHeatmap")
+#devtools::install_github("jokergoo/ComplexHeatmap")
+#if (!requireNamespace("BiocManager", quietly=TRUE))
+  #install.packages("BiocManager")
+#BiocManager::install("ComplexHeatmap")
+
+
+######################################################################
+
+#preliminary plots to filter through redundent go-terms 
+
+######################################################################
 
 #choose go-terms file to process
 file_to_open <- file.choose()
@@ -31,20 +58,6 @@ downregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=3, col_names =
 upregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
 downregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=4, col_names = TRUE))
 
-#ignore for now - old ploting method for dendrogram
-#hv <- as.matrix(heatmap_values[,2:9])
-#d <- dist(scale(t(hv)))
-#h.clust.d <- hclust(d)
-#hv <- as.data.frame(hv)
-#hv <- hv[,c(h.clust.d$order)]
-
-#d2 <- dist(scale(hv))
-#h.clust.d2 <- hclust(d2, method = "ward.D2")
-#hv <- hv[c(h.clust.d2$order),]
-
-#rownames_in_order <- heatmap_values$`Fasta headers`
-#rownames_in_order <- rownames_in_order[h.clust.d2$order]
-#hv <- cbind(rownames_in_order,hv)3testing <- melt(hv, id = c("rownames_in_order"))
 
 #function to convert \t into underscores
 remove_tabs <- function(n){
@@ -243,101 +256,509 @@ downregulated_mol_counts <- grid.arrange(downregulated_mol_parent, downregulated
 ggsave(filename = "Downregulated_mol_counts.jpg", plot = downregulated_mol_counts, width = 32, height = 20, units = "in", dpi = 400)
 dev.off()
 
-######################--------------------filtered go terms
+######################################################################
+
+#filtered go terms
+
+######################################################################
+
+#choose go-terms file to process
+file_to_open <- file.choose() #choose
+
+upregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
+upregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
+downregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=4, col_names = TRUE))
+downregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=3, col_names = TRUE))
+
+#up mol filtered terms
+all_filtered_up_mol_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
+                                      "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
+                                      "Ontology Term ID" = character(), stringsAsFactors = FALSE)
+for (i in 1:nrow(upregulated_mol_filtered)){
+  if(is.na(upregulated_mol_filtered[i,6]) == TRUE){
+    temp_data_frame <- data.frame(upregulated_mol_filtered[i,1],upregulated_mol_filtered[i,4],"Parent GO",upregulated_mol_filtered[i,8],upregulated_mol_filtered[i,7])
+    colnames(temp_data_frame) <- colnames(all_filtered_up_mol_terms)
+    all_filtered_up_mol_terms <- rbind(all_filtered_up_mol_terms, temp_data_frame)
+  }
+  if(is.na(upregulated_mol_filtered[i,8]) == TRUE){
+    temp_data_frame <- data.frame(upregulated_mol_filtered[i,1],upregulated_mol_filtered[i,4],"Child GO",upregulated_mol_filtered[i,6],upregulated_mol_filtered[i,5])
+    colnames(temp_data_frame) <- colnames(all_filtered_up_mol_terms)
+    all_filtered_up_mol_terms <- rbind(all_filtered_up_mol_terms, temp_data_frame)
+  }
+}
+all_filtered_up_mol_terms$Protein.Phytozome.identifier <- as.character(all_filtered_up_mol_terms$Protein.Phytozome.identifier)
+
+#up bio filtered terms
+all_filtered_up_bio_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
+                                        "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
+                                        "Ontology Term ID" = character(), stringsAsFactors = FALSE)
+for (i in 1:nrow(upregulated_bio_filtered)){
+  if(is.na(upregulated_bio_filtered[i,6]) == TRUE){
+    temp_data_frame <- data.frame(upregulated_bio_filtered[i,1],upregulated_bio_filtered[i,4],"Parent GO",upregulated_bio_filtered[i,8],upregulated_bio_filtered[i,7])
+    colnames(temp_data_frame) <- colnames(all_filtered_up_bio_terms)
+    all_filtered_up_bio_terms <- rbind(all_filtered_up_bio_terms, temp_data_frame)
+  }
+  if(is.na(upregulated_bio_filtered[i,8]) == TRUE){
+    temp_data_frame <- data.frame(upregulated_bio_filtered[i,1],upregulated_bio_filtered[i,4],"Child GO",upregulated_bio_filtered[i,6],upregulated_bio_filtered[i,5])
+    colnames(temp_data_frame) <- colnames(all_filtered_up_bio_terms)
+    all_filtered_up_bio_terms <- rbind(all_filtered_up_bio_terms, temp_data_frame)
+  }
+}
+
+#down mol filtered terms
+all_filtered_down_mol_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
+                                        "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
+                                        "Ontology Term ID" = character(), stringsAsFactors = FALSE)
+for (i in 1:nrow(downregulated_mol_filtered)){
+  if(is.na(downregulated_mol_filtered[i,6]) == TRUE){
+    temp_data_frame <- data.frame(downregulated_mol_filtered[i,1],downregulated_mol_filtered[i,4],"Parent GO",downregulated_mol_filtered[i,8],downregulated_mol_filtered[i,7])
+    colnames(temp_data_frame) <- colnames(all_filtered_down_mol_terms)
+    all_filtered_down_mol_terms <- rbind(all_filtered_down_mol_terms, temp_data_frame)
+  }
+  if(is.na(downregulated_mol_filtered[i,8]) == TRUE){
+    temp_data_frame <- data.frame(downregulated_mol_filtered[i,1],downregulated_mol_filtered[i,4],"Child GO",downregulated_mol_filtered[i,6],downregulated_mol_filtered[i,5])
+    colnames(temp_data_frame) <- colnames(all_filtered_up_mol_terms)
+    all_filtered_down_mol_terms <- rbind(all_filtered_down_mol_terms, temp_data_frame)
+  }
+}
+
+#down bio filtered terms
+all_filtered_down_bio_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
+                                        "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
+                                        "Ontology Term ID" = character(), stringsAsFactors = FALSE)
+for (i in 1:nrow(downregulated_bio_filtered)){
+  if(is.na(downregulated_bio_filtered[i,6]) == TRUE){
+    temp_data_frame <- data.frame(downregulated_bio_filtered[i,1],downregulated_bio_filtered[i,4],"Parent GO",downregulated_bio_filtered[i,8],downregulated_bio_filtered[i,7])
+    colnames(temp_data_frame) <- colnames(all_filtered_down_bio_terms)
+    all_filtered_down_bio_terms <- rbind(all_filtered_down_bio_terms, temp_data_frame)
+  }
+  if(is.na(downregulated_bio_filtered[i,8]) == TRUE){
+    temp_data_frame <- data.frame(downregulated_bio_filtered[i,1],downregulated_bio_filtered[i,4],"Child GO",downregulated_bio_filtered[i,6],downregulated_bio_filtered[i,5])
+    colnames(temp_data_frame) <- colnames(all_filtered_down_bio_terms)
+    all_filtered_down_bio_terms <- rbind(all_filtered_down_bio_terms, temp_data_frame)
+  }
+}
+
+####################################################
+
+#plotting molecular Function terms
+
+####################################################
+replot_mol_terms <- data.frame("Protein Identifier" = character(), "fasta header" = character(), "Regulation" = character(), "Ontology Term Name" = character(), "Ontology ID" = character())
+for (i in 1:nrow(all_filtered_up_mol_terms)){
+  temp_dataframe <- data.frame(all_filtered_up_mol_terms[i,1], all_filtered_up_mol_terms[i,2], "Upregulated", all_filtered_up_mol_terms[i,4], all_filtered_up_mol_terms[i,5])
+  colnames(temp_dataframe) <- colnames(replot_mol_terms)
+  replot_mol_terms <- rbind(replot_mol_terms, temp_dataframe)
+}
+for (i in 1:nrow(all_filtered_down_mol_terms)){
+  temp_dataframe <- data.frame(all_filtered_down_mol_terms[i,1], all_filtered_down_mol_terms[i,2], "Downregulated", all_filtered_down_mol_terms[i,4], all_filtered_down_mol_terms[i,5])
+  colnames(temp_dataframe) <- colnames(replot_mol_terms)
+  replot_mol_terms <- rbind(replot_mol_terms, temp_dataframe)
+}
+
+order_list_replot_mol <- replot_mol_terms %>% group_by(replot_mol_terms$Ontology.Term.Name, replot_mol_terms$Regulation) %>% 
+  dplyr::summarise(n=n()) %>% arrange(desc(n))
+
+manual_ordering_based_on_order_list_and_personal_preferences_mol <- c("cysteine-type peptidase activity",
+                                                                      "serine-type carboxypeptidase activity",
+                                                                      "hydrolase activity",
+                                                                      "oxidoreductase activity",
+                                                                      "peptidase activity",
+                                                                      "hydrolase activity, hydrolyzing O-glycosyl compounds",
+                                                                      "catalytic activity",
+
+                                                                      "serine-type endopeptidase activity",
+                                                                      "threonine-type endopeptidase activity",
+                                                                      "oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor",
+                                                                      "phosphoglycerate mutase activity",                                                    
+                                                                      "intramolecular transferase activity",
+                                                                      "glutamate decarboxylase activity",                                                           
+                                                                      "O-methyltransferase activity",   
+                                                                      "structural molecule activity",
+                                                                      "aspartic-type endopeptidase activity",
+                                                                      "endopeptidase activity",
+                                                                      "magnesium ion binding",
+                                                                      "oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor",
+                                                                      "glycolytic process",
+                                                                      "ligase activity",
+                                                                      "structural constituent of ribosome",
+                                                                      
+                                                                      "hydro-lyase activity",
+                                                                      "carboxypeptidase activity",
+                                                                      "hydrolase activity, acting on glycosyl bonds",
+                                                                      "peptidase activity, acting on L-amino acid peptides",
+                                                                      "peroxidase activity")
+
+                                              
+
+replot_mol_terms$Ontology.Term.Name <- factor(replot_mol_terms$Ontology.Term.Name, levels = manual_ordering_based_on_order_list_and_personal_preferences_mol)
+
+
+sysfonts::font_add("Arial", "arial.ttf")
+
+color_plot <- c("Upregulated" = "#BA3241", "Downregulated" = "#3C7AB2")
+
+replot_mol_group1 <- ggplot(replot_mol_terms, 
+                     aes(x = factor(replot_mol_terms$Ontology.Term.Name),
+                         y=..count.., fill = replot_mol_terms$Regulation)) +
+  geom_bar(colour = "black") + 
+  theme_bw() +
+  theme(axis.text.x =  element_text(angle = 90, hjust = 1), text = element_text(size=14, family = "Arial",colour = "black"), legend.position="none") +
+  xlab("") + 
+  scale_fill_manual(values = color_plot) +
+  ylab("Counts") +
+  coord_flip(ylim = c(0,50))
+
+replot_mol_group2 <- ggplot(replot_mol_terms, 
+                            aes(x = factor(replot_mol_terms$Ontology.Term.Name),
+                                y=..count.., fill = replot_mol_terms$Regulation)) +
+  geom_bar(colour = "black") + 
+  theme_bw() +
+  theme(axis.text.y =  element_blank(), text = element_text(size=14, family = "Arial",colour = "black"),legend.key.size=unit(6,"point")) +
+  xlab("") + 
+  ylab("Counts") +
+  scale_fill_manual(values = color_plot) +
+  guides(fill = guide_legend(title = "GO Terms")) +
+  coord_flip(ylim = c(75,150))
+
+#mol <- ggpubr::ggarrange(replot_mol_group1,replot_mol_group2, widths = c(3,1.3))
+#annotate_figure(mol, fig.lab = "Molecular Function GO Terms", fig.lab.face = "bold", fig.lab.pos = "top.left",fig.lab.size = 18)
 
 
 
+####################################################
+
+#plotting biological process terms
+
+####################################################
+replot_bio_terms <- data.frame("Protein Identifier" = character(), "fasta header" = character(), "Regulation" = character(), "Ontology Term Name" = character(), "Ontology ID" = character())
+for (i in 1:nrow(all_filtered_up_bio_terms)){
+  temp_dataframe <- data.frame(all_filtered_up_bio_terms[i,1], all_filtered_up_bio_terms[i,2], "Upregulated", all_filtered_up_bio_terms[i,4], all_filtered_up_bio_terms[i,5])
+  colnames(temp_dataframe) <- colnames(replot_bio_terms)
+  replot_bio_terms <- rbind(replot_bio_terms, temp_dataframe)
+}
+for (i in 1:nrow(all_filtered_down_bio_terms)){
+  temp_dataframe <- data.frame(all_filtered_down_bio_terms[i,1], all_filtered_down_bio_terms[i,2], "Downregulated", all_filtered_down_bio_terms[i,4], all_filtered_down_bio_terms[i,5])
+  colnames(temp_dataframe) <- colnames(replot_bio_terms)
+  replot_bio_terms <- rbind(replot_bio_terms, temp_dataframe)
+}
 
 
+order_list_replot_bio <- replot_bio_terms %>% group_by(replot_bio_terms$Ontology.Term.Name, replot_bio_terms$Regulation) %>% 
+  dplyr::summarise(n=n()) %>% arrange(desc(n))
+
+manual_ordering_based_on_order_list_and_personal_preferences_bio <- c("ubiquitin-dependent protein catabolic process",
+                                                                      "glycolytic process",
+                                                                      "carbohydrate metabolic process",
+                                                                      "proteolysis",
+                                                                      
+                                                                      "cellular amino acid biosynthetic process",
+                                                                      "amide biosynthetic process",
+                                                                      "regulation of DNA replication",
+                                                                      "'de novo' IMP biosynthetic process",
+                                                                      "carbohydrate catabolic process",
+                                                                      "serine-type carboxypeptidase activity",
+                                                                      "cysteine-type peptidase activity",
+                                                                      "hydrolase activity",
+                                                                      "O-methyltransferase activity",
+                                                                      "purine nucleotide biosynthetic process",
+                                                                      "glucose catabolic process",
+                                                                      "isocitrate metabolic process",
+                                                                      "glutamate metabolic process",
+                                                                      "cellulose biosynthetic process",
+                                                                      "aspartic-type endopeptidase activity",
+                                                                      "cellular amino acid metabolic process",
+                                                                      "translation elongation factor activity",
+                                                                      "nucleoside metabolic process",
+                                                                      "methionine biosynthetic process",
+                                                                      "small molecule metabolic process",
+                                                                      "protein metabolic process",
+                                                                      "tRNA aminoacylation for protein translation",
+                                                                      "catalytic activity",
+                                                                      "oxidation-reduction process",
+                                                                      "metabolic process",
+                                                                      "translation",
+                                                                      
+                                                                      "response to oxidative stress", 
+                                                                      "peroxiredoxin activity",
+                                                                      "glutathione peroxidase activity",
+                                                                      "peroxidase activity")
+
+replot_bio_terms$Ontology.Term.Name <- factor(replot_bio_terms$Ontology.Term.Name, levels = manual_ordering_based_on_order_list_and_personal_preferences_bio)
 
 
+replot_bio_group1 <- ggplot(replot_bio_terms, 
+                            aes(x = factor(replot_bio_terms$Ontology.Term.Name),
+                                y=..count.., fill = replot_bio_terms$Regulation)) +
+  geom_bar(colour = "black") + 
+  theme_bw() +
+  theme(axis.text.x =  element_text(angle = 90, hjust = 1), text = element_text(size=14 ,family = "Arial", colour = "black"),legend.position="none") +
+  xlab("") + 
+  scale_fill_manual(values = color_plot) +
+  ylab("Counts")+
+  coord_flip(ylim = c(0,15)) 
+
+replot_bio_group2 <- ggplot(replot_bio_terms, 
+                            aes(x = factor(replot_bio_terms$Ontology.Term.Name),
+                                y=..count.., fill = replot_bio_terms$Regulation)) +
+  geom_bar(colour = "black") + 
+  theme_bw() +
+  theme(axis.text.y =  element_blank(), text = element_text(size= 14, family = "Arial", colour = "black"),legend.key.size=unit(6,"point")) +
+  xlab("") + 
+  scale_fill_manual(values = color_plot) +
+  ylab("Counts") +
+  guides(fill = guide_legend(title = "GO Terms")) +
+  coord_flip(ylim = c(20,60))
 
 
+                           
+####################################
+ggsave("MF_low.png", plot = replot_mol_group1, width = 7.5, height = 5, dpi = 300, units = "in")
+ggsave("MF_high.png", plot = replot_mol_group2, width = 3, height = 5, dpi = 300, units = "in")
 
 
-#############################--------------heatmapploting
+ggsave("BP_low.png", plot = replot_bio_group1, width = 5, height = 6, dpi = 300, units = "in")
+ggsave("BP_high.png", plot = replot_bio_group2, width = 3, height = 6, dpi = 300, units = "in")
 
-file_to_open <- file.choose()
-p_values <- as.data.frame(read_excel(file_to_open,sheet =1, col_names = TRUE))
+#######################################################
+
+#heatmapploting
+
+#######################################################
+
+#file_to_open <- file.choose()
+#p_values <- as.data.frame(read_excel(file_to_open,sheet =1, col_names = TRUE))
 #go_terms_citrus <- as.data.frame(read.csv(file_to_open, sep=",", header = TRUE))
 
-file_to_open <- file.choose()
+file_to_open <- file.choose() #choose heatmap Z scores
 heatmap_values <- as.data.frame(read_excel(file_to_open,sheet =1, col_names = TRUE))
 heatmap_values$`Fasta headers` <- as.factor(heatmap_values$`Fasta headers`)
 heatmap_values <- heatmap_values[,c(1,2,4,8,9,3,5,6,7)]
 
 
-
-
-
 heatmap_matrix <- as.matrix(heatmap_values[,2:9])
 rownames_heatmap <- heatmap_values$`Fasta headers`
+rownames_heatmap <- as.character(rownames_heatmap)
+                                 
+
+for (i in 1:length(rownames_heatmap)){
+  rownames_heatmap[[i]] <- substring(rownames_heatmap[[i]],2,regexpr("[0-9]m", rownames_heatmap[[i]])+1)
+  print(rownames_heatmap[[i]])
+}
+
+rownames_heatmap <- as.factor(rownames_heatmap)
 rownames(heatmap_matrix) <- rownames_heatmap
 
+all_go_terms <- data.frame("Upregulated Bio - GO" = character(length(rownames_heatmap)), 
+                           "Downregulated Bio - GO" = character(length(rownames_heatmap)),
+                           "Upregulated Mol - GO" = character(length(rownames_heatmap)), 
+                           "Downregulated Mol - GO" = character(length(rownames_heatmap)), stringsAsFactors = FALSE)
+all_go_terms <- cbind(rownames_heatmap, all_go_terms)
+all_go_terms$rownames_heatmap <- as.character(all_go_terms$rownames_heatmap)
 
-all_bio_go_terms <- rbind(upregulated_bio, downregulated_bio)
-test_color <-  as.factor(all_bio_go_terms[1:1355,8])
+for (i in 1:nrow(all_go_terms)){
+  #if the protein doesn't have a significant go term
+  if(all_go_terms[i,1] %in% all_filtered_up_bio_terms$Protein.Phytozome.identifier == FALSE){
+    all_go_terms[i,2] <- "NA"
+  }
+  if(all_go_terms[i,1] %in% all_filtered_down_bio_terms$Protein.Phytozome.identifier == FALSE){
+     all_go_terms[i,3] <- "NA"
+  }
+  if(all_go_terms[i,1] %in% all_filtered_up_mol_terms$Protein.Phytozome.identifier == FALSE){
+    all_go_terms[i,4] <- "NA"
+  }
+  if(all_go_terms[i,1] %in% all_filtered_down_mol_terms$Protein.Phytozome.identifier == FALSE){
+    all_go_terms[i,5] <- "NA"
+  }
+  # if the protein has a go term
+  if(all_go_terms[i,1] %in% all_filtered_up_bio_terms$Protein.Phytozome.identifier == TRUE){
+    line <-all_filtered_up_bio_terms[all_filtered_up_bio_terms$Protein.Phytozome.identifier %in% all_go_terms[i,1],]
+    all_go_terms[i,2] <- levels(line$Ontology.Term.Name)[line$Ontology.Term.Name]
+  }
+  if(all_go_terms[i,1] %in% all_filtered_down_bio_terms$Protein.Phytozome.identifier == TRUE){
+    line <-all_filtered_down_bio_terms[all_filtered_down_bio_terms$Protein.Phytozome.identifier %in% all_go_terms[i,1],]
+    all_go_terms[i,3] <- levels(line$Ontology.Term.Name)[line$Ontology.Term.Name]
+  }
+  if(all_go_terms[i,1] %in% all_filtered_up_mol_terms$Protein.Phytozome.identifier == TRUE){
+    line <-all_filtered_up_mol_terms[all_filtered_up_mol_terms$Protein.Phytozome.identifier %in% all_go_terms[i,1],]
+    all_go_terms[i,4] <- levels(line$Ontology.Term.Name)[line$Ontology.Term.Name]
+  }
+  if(all_go_terms[i,1] %in% all_filtered_down_mol_terms$Protein.Phytozome.identifier == TRUE){
+    line <-all_filtered_down_mol_terms[all_filtered_down_mol_terms$Protein.Phytozome.identifier %in% all_go_terms[i,1],]
+    all_go_terms[i,5] <- levels(line$Ontology.Term.Name)[line$Ontology.Term.Name]
+  }
+}
 
-color_bio_go <- colorRampPalette(brewer.pal(8, "Set2"))(length(unique(test_color)))
-names(color_bio_go) <- unique(test_color)
+##############---------------------complexheatmap package
 
-heatmap(heatmap_matrix, col = greenred(300), labRow = FALSE)
-
-
-col_fun = colorRamp2(c(-3, 0, 3), c("green", "black", "red"))
-circos.par(cell.padding = c(0, 0, 0, 0), gap.degree = 5)
-circos.initialize(rownames(heatmap_matrix), xlim = cbind(c(0,0), table(rownames(heatmap_matrix))))
+Infection_catagories <- c("Uninfected","Uninfected","Uninfected","Uninfected","Infected","Infected","Infected","Infected")
+infection_dataframe <- data.frame(colnames(heatmap_matrix), Infection_catagories, stringsAsFactors = FALSE)
+infection_dataframe$colnames.heatmap_matrix. <- as.character(infection_dataframe$colnames.heatmap_matrix.)
 
 
-#count_child_go_terms <- as.data.frame(table(upregulated_bio$`GO Term`))
-#count_child_go_terms <- count_child_go_terms[c(order(count_child_go_terms$Freq,decreasing = T )),]
+color_go_up_bio <- c(colorRampPalette(brewer.pal(8, "Dark2"))(length(unique(all_go_terms$Upregulated.Bio...GO))-1))
+color_go_down_mol <- c(colorRampPalette(brewer.pal(8, "Set2"))(length(unique(all_go_terms$Downregulated.Mol...GO))-1))
 
-#count_parent_go_terms <- as.data.frame(table(upregulated_bio$`Parents GO ID`))
-#count_parent_go_terms <- count_parent_go_terms[c(order(count_parent_go_terms$Freq, decreasing = T)),]
+color_go_up_mol <- c(colorRampPalette(brewer.pal(8, "Set3"))(length(unique(all_go_terms$Upregulated.Mol...GO))-1))
+color_go_down_bio <- c(colorRampPalette(brewer.pal(8, "Set1"))(length(unique(all_go_terms$Downregulated.Bio...GO))-1))
+
+go_term_annotation <- ComplexHeatmap::rowAnnotation("Upregulated Bio - GO" = all_go_terms$Upregulated.Bio...GO,
+                                                    "Downregulated Bio - GO" = all_go_terms$Downregulated.Bio...GO,
+                                                    "Upregulated Mol - GO" = all_go_terms$Upregulated.Mol...GO,
+                                                    "Downregulated Mol - GO" = all_go_terms$Downregulated.Mol...GO,
+                                                        col = list("Upregulated Bio - GO" =  c("NA" = "white",
+                                                                                               "carbohydrate metabolic process" = "#1B9E77",
+                                                                                               "proteolysis" = "#D95F02",
+                                                                                               "peroxidase activity" = "#7570B3",                  
+                                                                                               "ubiquitin-dependent protein catabolic process" = "#E7298A",
+                                                                                               "response to oxidative stress" = "#66A61E",           
+                                                                                               "glutathione peroxidase activity" = "#E6AB02",
+                                                                                               "glycolytic process" = "#A6761D",                   
+                                                                                               "peroxiredoxin activity" = "#666666"),
+                                                                   "Downregulated Bio - GO" = c("NA" = "white",
+                                                                                                "carbohydrate metabolic process" = "#E41A1C",              
+                                                                                                "glycolytic process" =  "#BA3241",
+                                                                                                "oxidation-reduction process" = "#904A67",             
+                                                                                                "nucleoside metabolic process" = "#66628C",
+                                                                                                "aspartic-type endopeptidase activity" = "#3C7AB2",     
+                                                                                                "isocitrate metabolic process" = "#3B88A1",
+                                                                                                "translation" =  "#409386",                      
+                                                                                                "metabolic process" = "#469F6C",
+                                                                                                "cellular amino acid metabolic process" = "#4BAB51",     
+                                                                                                "ubiquitin-dependent protein catabolic process" = "#599E59",
+                                                                                                "translation elongation factor activity" = "#6C866E",
+                                                                                                "tRNA aminoacylation for protein translation" = "#7E6F84",
+                                                                                                "protein metabolic process" = "#905899",        
+                                                                                                "catalytic activity" = "#A6548C",
+                                                                                                "small molecule metabolic process" = "#BF6065",             
+                                                                                                "glucose catabolic process" = "#D76C3D",
+                                                                                                "cellulose biosynthetic process" = "#F07816",  
+                                                                                                "cellular amino acid biosynthetic process" = "#FF8C05",
+                                                                                                "glutamate metabolic process" = "#FFAB11",
+                                                                                                "cysteine-type peptidase activity" = "#FFCA1D",            
+                                                                                                "methionine biosynthetic process" = "#FFE82A",         
+                                                                                                "proteolysis" = "#F8F332",                           
+                                                                                                "O-methyltransferase activity" = "#E3CA2F",              
+                                                                                                "amide biosynthetic process" = "#CDA12C",    
+                                                                                                "hydrolase activity" = "#B8782A",                  
+                                                                                                "serine-type carboxypeptidase activity" = "#A8572D",      
+                                                                                                "regulation of DNA replication" = "#BC6151",      
+                                                                                                "purine nucleotide biosynthetic process" = "#CF6C76",       
+                                                                                                "'de novo' IMP biosynthetic process" = "#E3769A",     
+                                                                                                "carbohydrate catabolic process" = "#F781BF"),
+                                                                   "Upregulated Mol - GO" = c("NA" = "white",
+                                                                                              "peroxidase activity" = "#8DD3C7",
+                                                                                              "catalytic activity" = "#D5EFBA",
+                                                                                              "hydrolase activity, hydrolyzing O-glycosyl compounds" = "#EDECBD",
+                                                                                              "hydrolase activity" = "#C3C0D6",
+                                                                                              "serine-type carboxypeptidase activity" = "#DF9AA1",
+                                                                                              "peptidase activity" = "#E48883",
+                                                                                              "carboxypeptidase activity" =  "#96A8C1",                         
+                                                                                              "cysteine-type peptidase activity" = "#B8B29F",
+                                                                                              "peptidase activity, acting on L-amino acid peptides" = "#F6B762",
+                                                                                              "oxidoreductase activity" = "#C7D267",
+                                                                                              "hydrolase activity, acting on glycosyl bonds" = "#CDD796",    
+                                                                                              "hydro-lyase activity" = "#FCCDE5"),
+                                                                   "Downregulated Mol - GO" = c("NA" = "white", 
+                                                                                                "hydrolase activity, hydrolyzing O-glycosyl compounds" = "#66C2A5",                                     
+                                                                                                "glycolytic process" =  "#98B08E",                                                             
+                                                                                                "oxidoreductase activity" =  "#CA9E78",                                                
+                                                                                                "catalytic activity" = "#FC8D62",                                                   
+                                                                                                "oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor" = "#D79384",
+                                                                                                "aspartic-type endopeptidase activity" = "#B299A7",                                                        
+                                                                                                "structural constituent of ribosome" = "#8DA0CB",                                                
+                                                                                                "endopeptidase activity" = "#AB98C8",                                                                  
+                                                                                                "ligase activity" = "#C991C5",                                                                          
+                                                                                                "peptidase activity" =  "#E78AC3",                                                                    
+                                                                                                "magnesium ion binding" = "#D1A39E",                                                                
+                                                                                                "phosphoglycerate mutase activity" = "#BBBD79",                                                            
+                                                                                                "intramolecular transferase activity" = "#A6D854",                                                   
+                                                                                                "glutamate decarboxylase activity" = "#C3D847",                                                
+                                                                                                "cysteine-type peptidase activity" = "#E1D83B",                                                   
+                                                                                                "O-methyltransferase activity" = "#FFD92F",                                                    
+                                                                                                "oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor" = "#F6D250",   
+                                                                                                "hydrolase activity" = "#EDCB72",                         
+                                                                                                "structural molecule activity" = "#E5C494",                                      
+                                                                                                "serine-type carboxypeptidase activity" = "#D4BE9E",                                         
+                                                                                                "threonine-type endopeptidase activity" = "#C3B8A8",                                 
+                                                                                                "serine-type endopeptidase activity" = "#B3B3B3")),
+                                                    width = unit(6, "mm"))
 
 
+z_score_color <-  circlize::colorRamp2(c(-4,0,4), c("#3C7AB2", "white","#BA3241"))
+font_arial <- windowsFonts(Times=windowsFont("Arial"))
 
 
-
-#alpha = upregulated_bio$`Ontology Term Name`
-#  scale_fill_brewer(palette = "Spectral")
-#scale_alpha_discrete()+
-#  scale_y_continuous(limits = c(0, 10)) + 
+windows()
 
 
-ggplot(downregulated_bio, aes(x=downregulated_bio$`Fasta header`, y = ..count.., fill= downregulated_bio$`Parent GO Term Name`)) +
-  geom_bar() +
-  theme_classic() +
-  theme(axis.text.x =  element_text(angle = 45, hjust = 1)) 
+ComplexHeatmap::ht_opt(legend_border = "black", heatmap_border = TRUE, annotation_border = TRUE)
+
+Heatmap_everything <- ComplexHeatmap::Heatmap(heatmap_matrix, 
+                       border = TRUE,
+                       col = z_score_color,
+                       width = unit(12, "cm"),
+                       height = unit(20, "cm"),
+
+                       #annotate treatments 
+                       top_annotation = HeatmapAnnotation(Treatment = anno_block(gp = gpar(fill = 3:2),
+                                                                                 labels = c("Uninfected", "Infected"),
+                                                                                 labels_gp = gpar(col = "black", fontsize = 14, fontfamily = "Arial")),
+                                                          height = unit(1, "cm")),
+                       #top_annotation = ComplexHeatmap::HeatmapAnnotation(Treatment = infection_dataframe$Infection_catagories, 
+                        #                                                  col = list(Treatment =c("Uninfected" = "#599E59", "Infected" = "#FF8C05")),
+                         #                                                 gp = gpar(fontsize = 14,fontfamily = "Arial")),
+
+                                                                          
+                                              
+                       #column modifications
+                       column_names_rot = 45, 
+                       column_split = 2, 
+                       show_column_names = FALSE,
+                       column_names_gp = gpar(fontsize = 8, fontfamily = "Arial"),
+                                              
+                       #row modifications + dendrogram
+                       show_row_names = FALSE,  
+                       row_dend_width = unit(40, "mm"), 
+
+                       #details regarding modifying legend
+                       heatmap_legend_param = list(col_fun = z_score_color, 
+                                                   legend_width = unit(30, "mm"),
+                                                   legend_height = unit(42, "mm"),
+                                                   title = "Z-score", 
+                                                   border = "black",
+                                                   title_gp = gpar(fontsize = 14, fontface = "bold", fontfamily = "Arial"),
+                                                   labels_gp = gpar(fontsize = 14,fontfamily = "Arial"),
+                                                   #adjust_annotation_extension = TRUE,
+                                                   grid_width = unit(0.6, "cm"),
+                                                   legend_label_gp = gpar(col = "black",fontsize = 12, fontfamily = "Arial")))
+
+ComplexHeatmap::draw(Heatmap_everything, heatmap_legend_side = "right", padding = unit(c(5,15,15,5), "mm"))
+
+dev.off()
+
+#annotation_legend_side = "right", merge_legend = TRUE,
+##########################################################
+
+#write to file go-terms supplemental table
+
+#########################################################
+
+
+#sup table
+final_names_up_mol <- all_filtered_up_mol_terms[,c(1,2,4,5)]
+final_names_up_bio <- all_filtered_up_bio_terms[,c(1,2,4,5)]
+final_names_down_mol <- all_filtered_down_mol_terms[,c(1,2,4,5)]
+final_names_down_bio <- all_filtered_down_bio_terms[,c(1,2,4,5)]
+
+write.xlsx(final_names_up_mol, "Supplemental_Table_GO_terms.xlsx", sheetName = "Upregulated_Molecular_Function", col.names = T, row.names = F)
+write.xlsx(final_names_up_bio, "Supplemental_Table_GO_terms.xlsx", sheetName = "Upregulated_Biological_Function", col.names = T, row.names = F, append = T)
+write.xlsx(final_names_down_mol, "Supplemental_Table_GO_terms.xlsx", sheetName = "Downregulated_Molecular_Function", col.names = T, row.names = F, append = T)
+write.xlsx(final_names_down_bio, "Supplemental_Table_GO_terms.xlsx", sheetName = "Downregulated_Biological_Function", col.names = T, row.names = F, append = T)
+
+
 
 gg_color_hue <- function(n) {
   hues = seq(15, 375, length = n + 1)
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
-
-#Ti/Ri plasmid colors
-titypes<-c("TypeIa","TypeIb","TypeI", "TypeII", "TypeIII", "TypeIV", "TypeV", "RiTypeI","RiTypeII","RiTypeIII","TypeVI", "At", "chromid", "TypeIVa","TypeIVb","TypeIVc")
-plasmidcolors<-c("#E41A1C", "#8B0000", brewer.pal(9,"Set1"), "darkturquoise", "seagreen1", "#6a3672", "#984EA3", "#c194c7")
-names(plasmidcolors)<-titypes
-#plasmidcolors
-#barplot(rep(10,11), col=plasmidcolors)
-
-#Species colors
-specieslist<-c("G1","G4","G7","G7_Other","G8","G9","larrymoorei","rhizogenes","rubi","skierniewicense","vitis")
-speciescolors<-gg_color_hue(11)
-names(speciescolors)<-specieslist
-#speciescolors
-#barplot(rep(10,11), col=speciescolors)
-
-#Biovar colors
-biovarlist<-c("BiovarI","BiovarII","Brucella","BiovarIII","Rhizobium","Rhizobium_Other","Neorhizobium","Sinorhizobium-Ensifer","undicola","Mesorhizobium", "arsenijevicii", "G2", "blue", "black", "Ochrobactrum", "Shinella", "Aureimonas", "Martelella","rhizogenes-like")
-biovarcolors<-c("#E41A1C","#4DAF4A","darkgreen","#377EB8","#04048C","cadetblue3","darkcyan","#984EA3","orchid","gray", "salmon", "purple", "blue", "black", "darkolivegreen1", "orange", "lightgoldenrod1", "pink", "dodgerblue3")
-#biovarcolors<-c("#E41A1C","#4DAF4A","darkgreen","#377EB8","dodgerblue1","cadetblue3","darkcyan","#984EA3","orchid","gray", "salmon", "purple", "blue", "black", "green", "orange", "yellow", "pink")
-names(biovarcolors)<-biovarlist
-#biovarcolors
-
-#Combined biovar/species colors
-taxonomycolors<-c(speciescolors,biovarcolors)
-#taxonomycolors
-#barplot(rep(10,21), col=taxonomycolors)
-
