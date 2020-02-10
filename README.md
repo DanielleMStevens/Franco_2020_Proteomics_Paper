@@ -5,7 +5,7 @@ The script in this repository is for processing and ploting z-scores from total 
 
 -----------------------
 
-Do to the redundacy of go-terms called for each protein present, we had to first make a custom script to:
+Due to the redundacy of go-terms called for each protein present, we had to first make a custom script to:
  1) bin the terms by the protein called
  2) plotted to see which terms are most abundant
  3) manually selected based upon the annotation of the protein
@@ -14,6 +14,6 @@ This list is then writen out to the file. Additonally, these proteins were furth
  1) binned based upon their desginated go-terms (molecular function and biological proccess) 
  2) labeled and subsequently plotted upon weather the term was significantly downregulated or upregulated
  
- Finally, normalized z-scores were clustered and plotted with additonal meta data (if the sample was from infected or healthy tissue).
+ Finally, normalized z-scores were clustered and plotted with additonal meta data collected in the study.
  
  Information regarding package versions can be found in the session_info.txt document.
