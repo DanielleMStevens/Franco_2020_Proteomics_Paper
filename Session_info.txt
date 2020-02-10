@@ -1,1 +1,39 @@
+###################################################################################################
+# Danielle M. Stevens, Department of Plant Pathology
+# This provides information regarding packages and their versions to be able to run the script
+# If you want to install a specific version of a package and run this script, I would recomend starting a new project,
+# implemtning packrat (package management), and install packages by specififying the package version. 
+# (ex. >install.packages("package_name", version = '0.0.1')
+####################################################################################################
+
 >session_info()
+
+R version 3.6.0 (2019-04-26)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 18362)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252   
+[3] LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
+[5] LC_TIME=English_United States.1252    
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ComplexHeatmap_2.0.0 Rcpp_1.0.3           rafalib_1.0.0        circlize_0.4.8      
+ [5] gridExtra_2.3        reshape2_1.4.3       remotes_2.1.0        gplots_3.0.1.2      
+ [9] caTools_1.18.0       stringr_1.4.0        forcats_0.4.0        xlsx_0.6.1          
+[13] magrittr_1.5         plyr_1.8.5           readxl_1.3.1         showtext_0.7-1      
+[17] showtextdb_2.0       sysfonts_0.8         extrafont_0.17       RColorBrewer_1.1-2  
+
+loaded via a namespace (and not attached):
+ [1] cellranger_1.1.0    compiler_3.6.0      bitops_1.0-6        tools_3.6.0        
+ [5] clue_0.3-57         gtable_0.3.0        png_0.1-7           parallel_3.6.0     
+ [9] rJava_0.9-11        Rttf2pt1_1.3.8      cluster_2.0.8       fs_1.3.1           
+[13] xlsxjars_0.6.1      GlobalOptions_0.1.1 gtools_3.8.1        glue_1.3.1         
+[17] R6_2.4.1            GetoptLong_0.1.8    gdata_2.18.0        extrafontdb_1.0    
+[21] shape_1.4.4         colorspace_1.4-1    KernSmooth_2.23-15  stringi_1.4.4      
+[25] rjson_0.2.20   
