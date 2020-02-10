@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------------------------
 # Coaker Lab - Plant Pathology Department UC Davis
 # Author: Danielle M. Stevens
-# Last Updated: 10/1/19
+# Last Updated: 2/9/2020
 # Script Purpose: Plotting Signifcant Go-terms from proteomics data to assess redundancy; plot final heatmap
 # Inputs Necessary: Excel file with signficant go terms, protein id, child and parent go-terms, z-scores
 # Outputs: Visualization of comparsion between go-terms called
@@ -17,6 +17,7 @@ library(sysfonts)
 library(showtext)
 library(readxl)
 library(rlang)
+library(vctrs)
 library(tidyverse)
 library(plyr)
 library(magrittr)
@@ -38,6 +39,11 @@ library(ggplot2)
 library(Rcpp)
 library(devtools)
 library(ComplexHeatmap)
+
+# NOTE: I have had issues sometimes loading the complex heatmap package (not sure why), 
+# Try one of the many ways to download the package and if still running into troubles,
+# consult google or contact me
+
 #install_github("jokergoo/ComplexHeatmap")
 #devtools::install_github("jokergoo/ComplexHeatmap")
 #if (!requireNamespace("BiocManager", quietly=TRUE))
@@ -58,15 +64,11 @@ downregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=3, col_names =
 upregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
 downregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=4, col_names = TRUE))
 
+######################################################################
 
-#function to convert \t into underscores
-remove_tabs <- function(n){
-  for (i in 1:nrow(n)){
-    n[i,4] <- gsub("\t","_",n[i,4])
-    print(n[i,4])
-  }
-  return(n)
-}
+#convert \t into underscores
+
+######################################################################
 
 for (i in 1:nrow(upregulated_bio)){
   upregulated_bio[i,4] <- gsub("\t","_", upregulated_bio[i,4])
@@ -85,13 +87,12 @@ for (i in 1:nrow(downregulated_mol)){
   downregulated_mol[i,4] <- gsub("\t","_", downregulated_mol[i,4])
 }
 
-#broken function....
-remove_tabs(upregulated_bio)
-remove_tabs(downregulated_bio)
-remove_tabs(upregulated_mol)
-remove_tabs(downregulated_mol)
+######################################################################
 
 # process and rewrite new file (excel) with go terms by number of hits by phytozome identifier
+
+######################################################################
+
 counts_upregulated_mol <- as.data.frame(table(upregulated_mol$`Protein Phytozome identifier`))
 counts_upregulated_mol <- counts_upregulated_mol[order(table(upregulated_mol$`Protein Phytozome identifier`), decreasing = T),]
 counts_upregulated_mol$Var1 <- as.character(counts_upregulated_mol$Var1)
@@ -117,8 +118,14 @@ write.xlsx(total_names_up_bio, "GO_terms_decreasing_order_abundance.xlsx", sheet
 write.xlsx(total_names_down_mol, "GO_terms_decreasing_order_abundance.xlsx", sheetName = "down_mol", col.names = T, row.names = F, append = T)
 write.xlsx(total_names_down_bio, "GO_terms_decreasing_order_abundance.xlsx", sheetName = "down_bio", col.names = T, row.names = F, append = T)
 
-#plot total counts for each significant protein detected
+######################################################################
+
+# plot total counts for each significant protein detected
+
+######################################################################
+
 #################### upregulated bio function go terms
+
 fasta_names_upregulated_bio <- upregulated_bio[order(fct_infreq(upregulated_bio$`Protein Phytozome identifier`)),c(1,4)]
 fasta_names_upregulated_bio <- distinct(fasta_names_upregulated_bio)
 
@@ -154,6 +161,7 @@ dev.off()
 
 
 #################### downregulated bio function go terms
+
 fasta_names_downregulated_bio <- downregulated_bio[order(fct_infreq(downregulated_bio$`Protein Phytozome identifier`)),c(1,4)]
 fasta_names_downregulated_bio <- distinct(fasta_names_downregulated_bio)
 
@@ -189,6 +197,7 @@ ggsave(filename = "Downregulated_bio_counts.jpg", plot = downregulated_bio_count
 dev.off()
 
 #################### upregulated mol function go terms
+
 fasta_names_upregulated_mol <- upregulated_mol[order(fct_infreq(upregulated_mol$`Protein Phytozome identifier`)),c(1,4)]
 fasta_names_upregulated_mol <- distinct(fasta_names_upregulated_mol)
 
@@ -223,6 +232,7 @@ ggsave(filename = "Upregulated_mol_counts.jpg", plot = upregulated_mol_counts, w
 dev.off()
 
 #################### upregulated mol function go terms
+
 fasta_names_downregulated_mol <- downregulated_mol[order(fct_infreq(downregulated_mol$`Protein Phytozome identifier`)),c(1,4)]
 fasta_names_downregulated_mol <- distinct(fasta_names_downregulated_mol)
 
@@ -263,7 +273,7 @@ dev.off()
 ######################################################################
 
 #choose go-terms file to process
-file_to_open <- file.choose() #choose
+file_to_open <- file.choose() #choose jessica's go-terms (remain file)
 
 upregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
 upregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
@@ -271,6 +281,7 @@ downregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=4, co
 downregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=3, col_names = TRUE))
 
 #up mol filtered terms
+
 all_filtered_up_mol_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
                                       "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
                                       "Ontology Term ID" = character(), stringsAsFactors = FALSE)
@@ -289,6 +300,7 @@ for (i in 1:nrow(upregulated_mol_filtered)){
 all_filtered_up_mol_terms$Protein.Phytozome.identifier <- as.character(all_filtered_up_mol_terms$Protein.Phytozome.identifier)
 
 #up bio filtered terms
+
 all_filtered_up_bio_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
                                         "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
                                         "Ontology Term ID" = character(), stringsAsFactors = FALSE)
@@ -306,6 +318,7 @@ for (i in 1:nrow(upregulated_bio_filtered)){
 }
 
 #down mol filtered terms
+
 all_filtered_down_mol_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
                                         "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
                                         "Ontology Term ID" = character(), stringsAsFactors = FALSE)
@@ -323,6 +336,7 @@ for (i in 1:nrow(downregulated_mol_filtered)){
 }
 
 #down bio filtered terms
+
 all_filtered_down_bio_terms <- data.frame("Protein Phytozome identifier" = character(), "fasta header" = character(),
                                         "GO Term Relationship" = character(), "Ontology Term Name" = character(), 
                                         "Ontology Term ID" = character(), stringsAsFactors = FALSE)
@@ -339,11 +353,13 @@ for (i in 1:nrow(downregulated_bio_filtered)){
   }
 }
 
+
 ####################################################
 
 #plotting molecular Function terms
 
 ####################################################
+
 replot_mol_terms <- data.frame("Protein Identifier" = character(), "fasta header" = character(), "Regulation" = character(), "Ontology Term Name" = character(), "Ontology ID" = character())
 for (i in 1:nrow(all_filtered_up_mol_terms)){
   temp_dataframe <- data.frame(all_filtered_up_mol_terms[i,1], all_filtered_up_mol_terms[i,2], "Upregulated", all_filtered_up_mol_terms[i,4], all_filtered_up_mol_terms[i,5])
@@ -356,8 +372,8 @@ for (i in 1:nrow(all_filtered_down_mol_terms)){
   replot_mol_terms <- rbind(replot_mol_terms, temp_dataframe)
 }
 
-order_list_replot_mol <- replot_mol_terms %>% group_by(replot_mol_terms$Ontology.Term.Name, replot_mol_terms$Regulation) %>% 
-  dplyr::summarise(n=n()) %>% arrange(desc(n))
+#order_list_replot_mol <- replot_mol_terms %>%  dplyr::group_by(replot_mol_terms$Ontology.Term.Name, replot_mol_terms$Regulation) %>% 
+ # dplyr::summarise(n=n()) %>% arrange(desc(n))
 
 manual_ordering_based_on_order_list_and_personal_preferences_mol <- c("cysteine-type peptidase activity",
                                                                       "serine-type carboxypeptidase activity",
@@ -403,7 +419,8 @@ replot_mol_group1 <- ggplot(replot_mol_terms,
                          y=..count.., fill = replot_mol_terms$Regulation)) +
   geom_bar(colour = "black") + 
   theme_bw() +
-  theme(axis.text.x =  element_text(angle = 90, hjust = 1), text = element_text(size=14, family = "Arial",colour = "black"), legend.position="none") +
+  theme(axis.text.x =  element_text(hjust = 1, color = "black"), axis.text.y = element_text(color = "black"), axis.title.x = element_text(color = "black"),
+        text = element_text(size=9, family = "Arial",colour = "black"), legend.position="none") +
   xlab("") + 
   scale_fill_manual(values = color_plot) +
   ylab("Counts") +
@@ -414,16 +431,13 @@ replot_mol_group2 <- ggplot(replot_mol_terms,
                                 y=..count.., fill = replot_mol_terms$Regulation)) +
   geom_bar(colour = "black") + 
   theme_bw() +
-  theme(axis.text.y =  element_blank(), text = element_text(size=14, family = "Arial",colour = "black"),legend.key.size=unit(6,"point")) +
+  theme(axis.text.y =  element_blank(), axis.text.x = element_text(color = "black"), axis.title.x = element_text(color = "black"),
+        text = element_text(size=9, family = "Arial",colour = "black"),legend.key.size=unit(6,"point")) +
   xlab("") + 
   ylab("Counts") +
   scale_fill_manual(values = color_plot) +
   guides(fill = guide_legend(title = "GO Terms")) +
   coord_flip(ylim = c(75,150))
-
-#mol <- ggpubr::ggarrange(replot_mol_group1,replot_mol_group2, widths = c(3,1.3))
-#annotate_figure(mol, fig.lab = "Molecular Function GO Terms", fig.lab.face = "bold", fig.lab.pos = "top.left",fig.lab.size = 18)
-
 
 
 ####################################################
@@ -431,6 +445,7 @@ replot_mol_group2 <- ggplot(replot_mol_terms,
 #plotting biological process terms
 
 ####################################################
+
 replot_bio_terms <- data.frame("Protein Identifier" = character(), "fasta header" = character(), "Regulation" = character(), "Ontology Term Name" = character(), "Ontology ID" = character())
 for (i in 1:nrow(all_filtered_up_bio_terms)){
   temp_dataframe <- data.frame(all_filtered_up_bio_terms[i,1], all_filtered_up_bio_terms[i,2], "Upregulated", all_filtered_up_bio_terms[i,4], all_filtered_up_bio_terms[i,5])
@@ -444,8 +459,8 @@ for (i in 1:nrow(all_filtered_down_bio_terms)){
 }
 
 
-order_list_replot_bio <- replot_bio_terms %>% group_by(replot_bio_terms$Ontology.Term.Name, replot_bio_terms$Regulation) %>% 
-  dplyr::summarise(n=n()) %>% arrange(desc(n))
+#order_list_replot_bio <- replot_bio_terms %>% group_by(replot_bio_terms$Ontology.Term.Name, replot_bio_terms$Regulation) %>% 
+ # dplyr::summarise(n=n()) %>% arrange(desc(n))
 
 manual_ordering_based_on_order_list_and_personal_preferences_bio <- c("ubiquitin-dependent protein catabolic process",
                                                                       "glycolytic process",
@@ -492,7 +507,8 @@ replot_bio_group1 <- ggplot(replot_bio_terms,
                                 y=..count.., fill = replot_bio_terms$Regulation)) +
   geom_bar(colour = "black") + 
   theme_bw() +
-  theme(axis.text.x =  element_text(angle = 90, hjust = 1), text = element_text(size=14 ,family = "Arial", colour = "black"),legend.position="none") +
+  theme(axis.text.x =  element_text(hjust = 1, color = "black"), axis.text.y = element_text(color = "black"), axis.title.x = element_text(color = "black"),
+        text = element_text(size=9 ,family = "Arial", colour = "black"),legend.position="none") +
   xlab("") + 
   scale_fill_manual(values = color_plot) +
   ylab("Counts")+
@@ -503,22 +519,28 @@ replot_bio_group2 <- ggplot(replot_bio_terms,
                                 y=..count.., fill = replot_bio_terms$Regulation)) +
   geom_bar(colour = "black") + 
   theme_bw() +
-  theme(axis.text.y =  element_blank(), text = element_text(size= 14, family = "Arial", colour = "black"),legend.key.size=unit(6,"point")) +
+  theme(axis.text.y =  element_blank(), axis.text.x = element_text(color = "black"), axis.title.x = element_text(color = "black"),
+        text = element_text(size= 9, family = "Arial", colour = "black"),legend.key.size=unit(6,"point")) +
   xlab("") + 
   scale_fill_manual(values = color_plot) +
   ylab("Counts") +
   guides(fill = guide_legend(title = "GO Terms")) +
   coord_flip(ylim = c(20,60))
 
+#######################################################
 
+#save plots to current directory
                            
-####################################
-ggsave("MF_low.png", plot = replot_mol_group1, width = 7.5, height = 5, dpi = 300, units = "in")
-ggsave("MF_high.png", plot = replot_mol_group2, width = 3, height = 5, dpi = 300, units = "in")
+######################################################
+
+#note may need to reset directory (can use getwd() to determine current directory and setwd() to set a new directory path)
+
+ggsave("MF_low.png", plot = replot_mol_group1, width = 5.8, height = 3.5, dpi = 300, units = "in")
+ggsave("MF_high.png", plot = replot_mol_group2, width = 2.5, height = 3.5, dpi = 300, units = "in")
 
 
-ggsave("BP_low.png", plot = replot_bio_group1, width = 5, height = 6, dpi = 300, units = "in")
-ggsave("BP_high.png", plot = replot_bio_group2, width = 3, height = 6, dpi = 300, units = "in")
+ggsave("BP_low.png", plot = replot_bio_group1, width = 3.5, height = 4, dpi = 300, units = "in")
+ggsave("BP_high.png", plot = replot_bio_group2, width = 2.5, height = 4, dpi = 300, units = "in")
 
 #######################################################
 
@@ -526,9 +548,6 @@ ggsave("BP_high.png", plot = replot_bio_group2, width = 3, height = 6, dpi = 300
 
 #######################################################
 
-#file_to_open <- file.choose()
-#p_values <- as.data.frame(read_excel(file_to_open,sheet =1, col_names = TRUE))
-#go_terms_citrus <- as.data.frame(read.csv(file_to_open, sep=",", header = TRUE))
 
 file_to_open <- file.choose() #choose heatmap Z scores
 heatmap_values <- as.data.frame(read_excel(file_to_open,sheet =1, col_names = TRUE))
@@ -589,7 +608,13 @@ for (i in 1:nrow(all_go_terms)){
   }
 }
 
-##############---------------------complexheatmap package
+
+######################################################################
+
+# Prep to plot heatmap via complex heatmap package
+
+######################################################################
+
 
 Infection_catagories <- c("Uninfected","Uninfected","Uninfected","Uninfected","Infected","Infected","Infected","Infected")
 infection_dataframe <- data.frame(colnames(heatmap_matrix), Infection_catagories, stringsAsFactors = FALSE)
@@ -685,26 +710,27 @@ go_term_annotation <- ComplexHeatmap::rowAnnotation("Upregulated Bio - GO" = all
                                                     width = unit(6, "mm"))
 
 
-z_score_color <-  circlize::colorRamp2(c(-4,0,4), c("#3C7AB2", "white","#BA3241"))
+z_score_color <-  circlize::colorRamp2(c(-2,0,2), c("#3C7AB2", "white","#BA3241"))
 font_arial <- windowsFonts(Times=windowsFont("Arial"))
 
-
-windows()
 
 
 ComplexHeatmap::ht_opt(legend_border = "black", heatmap_border = TRUE, annotation_border = TRUE)
 
+pdf("Heatmap Z scores_v2.pdf", width = 7, height = 11)
+
 Heatmap_everything <- ComplexHeatmap::Heatmap(heatmap_matrix, 
                        border = TRUE,
                        col = z_score_color,
-                       width = unit(12, "cm"),
-                       height = unit(20, "cm"),
+                       width = unit(4.5, "in"),
+                       height = unit(9.5, "in"),
+
 
                        #annotate treatments 
                        top_annotation = HeatmapAnnotation(Treatment = anno_block(gp = gpar(fill = 3:2),
                                                                                  labels = c("Uninfected", "Infected"),
                                                                                  labels_gp = gpar(col = "black", fontsize = 14, fontfamily = "Arial")),
-                                                          height = unit(1, "cm")),
+                                                          height = unit(0.8, "cm")),
                        #top_annotation = ComplexHeatmap::HeatmapAnnotation(Treatment = infection_dataframe$Infection_catagories, 
                         #                                                  col = list(Treatment =c("Uninfected" = "#599E59", "Infected" = "#FF8C05")),
                          #                                                 gp = gpar(fontsize = 14,fontfamily = "Arial")),
@@ -712,28 +738,28 @@ Heatmap_everything <- ComplexHeatmap::Heatmap(heatmap_matrix,
                                                                           
                                               
                        #column modifications
-                       column_names_rot = 45, 
                        column_split = 2, 
                        show_column_names = FALSE,
-                       column_names_gp = gpar(fontsize = 8, fontfamily = "Arial"),
-                                              
+
                        #row modifications + dendrogram
                        show_row_names = FALSE,  
-                       row_dend_width = unit(40, "mm"), 
+                       row_dend_width = unit(30, "mm"), 
+                       #row_dend_gp = 
 
                        #details regarding modifying legend
                        heatmap_legend_param = list(col_fun = z_score_color, 
                                                    legend_width = unit(30, "mm"),
-                                                   legend_height = unit(42, "mm"),
+                                                   legend_height = unit(38, "mm"),
                                                    title = "Z-score", 
                                                    border = "black",
-                                                   title_gp = gpar(fontsize = 14, fontface = "bold", fontfamily = "Arial"),
-                                                   labels_gp = gpar(fontsize = 14,fontfamily = "Arial"),
+                                                   title_gp = gpar(fontsize = 12, fontface = "bold", fontfamily = "Arial"),
+                                                   labels_gp = gpar(fontsize = 12,fontfamily = "Arial"),
                                                    #adjust_annotation_extension = TRUE,
-                                                   grid_width = unit(0.6, "cm"),
+                                                   grid_width = unit(0.5, "cm"),
                                                    legend_label_gp = gpar(col = "black",fontsize = 12, fontfamily = "Arial")))
 
-ComplexHeatmap::draw(Heatmap_everything, heatmap_legend_side = "right", padding = unit(c(5,15,15,5), "mm"))
+ComplexHeatmap::draw(Heatmap_everything,    
+                     heatmap_legend_side = "right", padding = unit(c(5,5,5,5), "mm"))
 
 dev.off()
 
@@ -758,7 +784,3 @@ write.xlsx(final_names_down_bio, "Supplemental_Table_GO_terms.xlsx", sheetName =
 
 
 
-gg_color_hue <- function(n) {
-  hues = seq(15, 375, length = n + 1)
-  hcl(h = hues, l = 65, c = 100)[1:n]
-}
