@@ -1,6 +1,10 @@
-# Franco_2019_Proteomics_Paper
+# Enriched citrus vascular proteomics highlights the role of peroxidases and serine protease during Huanglongbing disease progression
 
-The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
+Jessica T. Franco, Shree P. Thapa, Zhiqian Pang, Fatta B. Gurung, Thomas Liebrand, Danielle M. Stevens, Veronica Ancona, Nian Wang, Gitta Coaker.
+
+-----------------------
+
+Purpose: The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
 
 
 -----------------------
