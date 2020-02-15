@@ -22,4 +22,4 @@ This list is then writen out to the file. This output (labeled Filtered_GO_terms
  Information regarding R and package versions can be found in the session_info.txt document. 
  
  
- ***There is one known problem with the script. One occasion, I have had issues wth the installation and loading of the ComplexHeatmap package. I suspect this may be due to myself working on a windows computer. The current fix I have is reinstalling the package, soemtimes using different methods of installation, which one can see in the script. This should fix the issue and allow you to run the script.
+NOTE: There is one known problem with the script. One occasion, I have had issues wth the installation and loading of the ComplexHeatmap package. I suspect this may be due to myself working on a windows computer. The current fix I have is reinstalling the package, soemtimes using different methods of installation (devtools vs. BiocManager), which one can see in the script. This should fix the issue and allow you to run the script.
