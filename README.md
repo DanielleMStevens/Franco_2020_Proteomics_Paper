@@ -7,7 +7,6 @@ Jessica T. Franco, Shree P. Thapa, Zhiqian Pang, Fatta B. Gurung, Thomas Liebran
 Purpose: The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
 
 
------------------------
 
 Due to the redundacy of go-terms called for each protein present, we had to first make a custom script to:
  1) bin the terms by the protein called
