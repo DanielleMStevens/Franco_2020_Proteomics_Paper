@@ -28,7 +28,7 @@ NOTE: There is one known problem with the script. One occasion, I have had issue
 &nbsp;
 &nbsp;
 
-![](Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline_for_github.png)
+![](Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline.png)
 
 
 
