@@ -57,8 +57,8 @@ library(ComplexHeatmap)
 
 ######################################################################
 
-#choose go-terms file to process
-file_to_open <- file.choose()
+#raw go-terms file to process - load in file
+file_to_open <- file.choose() #choose the file: v2_DEproteins_GOterms_09_20_2019.xlsx
 upregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
 downregulated_bio <- as.data.frame(read_excel(file_to_open, sheet=3, col_names = TRUE))
 upregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
@@ -72,17 +72,16 @@ downregulated_mol <- as.data.frame(read_excel(file_to_open, sheet=4, col_names =
 
 for (i in 1:nrow(upregulated_bio)){
   upregulated_bio[i,4] <- gsub("\t","_", upregulated_bio[i,4])
-  print(upregulated_bio[i,4])
 }
 
 for (i in 1:nrow(downregulated_bio)){
   downregulated_bio[i,4] <- gsub("\t","_", downregulated_bio[i,4])
-  print(downregulated_bio[i,4])
 }
+
 for (i in 1:nrow(upregulated_mol)){
   upregulated_mol[i,4] <- gsub("\t","_", upregulated_mol[i,4])
-  print(upregulated_mol[i,4])
 }
+
 for (i in 1:nrow(downregulated_mol)){
   downregulated_mol[i,4] <- gsub("\t","_", downregulated_mol[i,4])
 }
@@ -127,7 +126,9 @@ write.xlsx(total_names_down_bio, "GO_terms_decreasing_order_abundance.xlsx", she
 #################### upregulated bio function go terms
 
 fasta_names_upregulated_bio <- upregulated_bio[order(fct_infreq(upregulated_bio$`Protein Phytozome identifier`)),c(1,4)]
-fasta_names_upregulated_bio <- distinct(fasta_names_upregulated_bio)
+fasta_names_upregulated_bio <- dplyr::distinct(fasta_names_upregulated_bio)
+
+
 
 upregulated_bio_parent <- ggplot(upregulated_bio, 
                aes(x = fct_infreq(as.factor(upregulated_bio$`Protein Phytozome identifier`)),
@@ -159,6 +160,40 @@ upregulated_bio_counts <- grid.arrange(upregulated_bio_parent, upregulated_bio_c
 ggsave(filename = "Upregulated_bio_counts.jpg", plot = upregulated_bio_counts, width = 11, height = 6, units = "in", dpi = 400)
 dev.off()
 
+
+#################################################################
+
+# This plot is a subset of the data for the suplementary figure!!!
+
+#################################################################
+
+small_plot_for_supplementary_figure_fasta_name <- upregulated_bio[order(fct_infreq(upregulated_bio$`Protein Phytozome identifier`)),c(1,4)]
+small_plot_for_supplementary_figure <- upregulated_bio[order(fct_infreq(upregulated_bio$`Protein Phytozome identifier`)),]
+
+small_plot_for_supplementary_figure_fasta_name <- small_plot_for_supplementary_figure_fasta_name[1:19,]
+small_plot_for_supplementary_figure <- small_plot_for_supplementary_figure[1:19,]
+small_plot_for_supplementary_figure_fasta_name <- dplyr::distinct(small_plot_for_supplementary_figure_fasta_name)
+
+ggplot(small_plot_for_supplementary_figure, 
+       aes(x = fct_infreq(as.factor(small_plot_for_supplementary_figure$`Protein Phytozome identifier`)), 
+           y = ..count.., fill = small_plot_for_supplementary_figure$`Ontology Term Name`)) +
+  scale_x_discrete(label = small_plot_for_supplementary_figure_fasta_name$`Fasta header`) +
+  geom_bar (colour = "black", width = 0.6, position = position_stack(vjust = 1), size = 0.3) + 
+  theme_bw() +
+  theme(axis.text.x =  element_text(angle = 45, hjust = 1, size = 14, family = "Arial", color= "black"),
+        axis.text.y = element_text(color = 'black', size = 14, family = "Arial"), 
+          axis.title.y = element_text(color='black', size =16, family = "Arial"),
+        axis.title.x = element_text(color = 'black', size = 16, family = "Arial"),
+        aspect.ratio = 1.4,
+        legend.key.size=unit(10,"point"), legend.text = element_text(size = 14, color = "black"), 
+        legend.title = element_text(size = 16, color = "black"),
+        legend.position = "right") +
+  scale_y_continuous(breaks = seq(0,10, by = 1)) +
+  guides(fill = guide_legend(title = "GO Terms", nrow = 4)) +
+  xlab("\nProtein Annotation") 
+
+
+#######################################################
 
 #################### downregulated bio function go terms
 
@@ -196,6 +231,8 @@ ggsave(filename = "Downregulated_bio_counts.jpg", plot = downregulated_bio_count
 
 dev.off()
 
+#########################################################
+
 #################### upregulated mol function go terms
 
 fasta_names_upregulated_mol <- upregulated_mol[order(fct_infreq(upregulated_mol$`Protein Phytozome identifier`)),c(1,4)]
@@ -230,6 +267,8 @@ upregulated_mol_counts <- grid.arrange(upregulated_mol_parent, upregulated_mol_c
 
 ggsave(filename = "Upregulated_mol_counts.jpg", plot = upregulated_mol_counts, width = 32, height = 20, units = "in", dpi = 400)
 dev.off()
+
+######################################################
 
 #################### upregulated mol function go terms
 
