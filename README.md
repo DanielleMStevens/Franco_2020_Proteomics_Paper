@@ -24,5 +24,4 @@ This list is then writen out to the file. This output (labeled Filtered_GO_terms
  
 NOTE: There is one known problem with the script. One occasion, I have had issues wth the installation and loading of the ComplexHeatmap package. I suspect this may be due to myself working on a windows computer. The current fix I have is reinstalling the package, soemtimes using different methods of installation (devtools vs. BiocManager), which one can see in the script. This should fix the issue and allow you to run the script.
 
-![GO Terms Processing Pipeline](https://rawgithub.com/DanielleMStevens/Franco_2020_Proteomics_Paper/Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline_for_github.png)
-<img src = "https://rawgithub.com/DanielleMStevens/Franco_2020_Proteomics_Paper/Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline_for_github.png">
+![GO Terms Processing Pipeline](Supplemental_Figure_GO_Terms_pipeline_for_github.png)
