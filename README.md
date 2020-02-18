@@ -3,9 +3,9 @@
 Jessica T. Franco<sup>1</sup>, Shree P. Thapa<sup>1</sup>, Zhiqian Pang<sup>2</sup>, Fatta B. Gurung<sup>3</sup>, Thomas Liebrand<sup>1</sup>, Danielle M. Stevens<sup>1</sup>, Veronica Ancona<sup>3</sup>, Nian Wang<sup>2</sup>, Gitta Coaker<sup>1</sup>.
 
 
-<sup>1</sup>Department of Plant Pathology, University of California, Davis, USA
-<sup>2</sup>Citrus Research and Education Center, University of Florida, Lake Alfred, USA
-<sup>3</sup>Citrus Center, Texas A&M University, Weslaco, Texas, USA
+<sup>1</sup>Department of Plant Pathology, University of California, Davis, USA <br />
+<sup>2</sup>Citrus Research and Education Center, University of Florida, Lake Alfred, USA <br />
+<sup>3</sup>Citrus Center, Texas A&M University, Weslaco, Texas, USA <br />
 
 -----------------------
 
