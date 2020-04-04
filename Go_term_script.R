@@ -312,7 +312,7 @@ dev.off()
 ######################################################################
 
 #choose go-terms file to process
-file_to_open <- file.choose() #choose jessica's go-terms (remain file)
+file_to_open <- file.choose() #choose Filtered_GO_terms_to_plot.xlsx
 
 upregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
 upregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
