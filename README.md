@@ -1,4 +1,4 @@
-# Enriched citrus vascular proteomics highlights the role of peroxidases and serine protease during Huanglongbing disease progression
+# Citrus vascular proteomics highlights the role of peroxidases and serine proteases during Huanglongbing disease progression
 
 Jessica Y. Franco<sup>1</sup>, Shree P. Thapa<sup>1</sup>, Zhiqian Pang<sup>2</sup>, Fatta B. Gurung<sup>3</sup>, Thomas W. H. Liebrand<sup>1</sup>, Danielle M. Stevens<sup>1</sup>, Veronica Ancona<sup>3</sup>, Nian Wang<sup>2</sup>, Gitta Coaker<sup>1</sup>.
 
@@ -36,6 +36,9 @@ NOTE: There is one known problem with the script. On occasion, I have had issues
 
 ![](Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline.png)
 
+&nbsp;
+
+#### Paper can be found on bioRxiv ([here](https://doi.org/10.1101/2020.04.05.025718))
 
 
 
