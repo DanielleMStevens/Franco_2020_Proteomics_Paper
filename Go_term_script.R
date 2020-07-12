@@ -314,10 +314,10 @@ dev.off()
 #choose go-terms file to process
 file_to_open <- file.choose() #choose Filtered_GO_terms_to_plot.xlsx
 
-upregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=1, col_names = TRUE))
-upregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=2, col_names = TRUE))
-downregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet=4, col_names = TRUE))
-downregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet=3, col_names = TRUE))
+upregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet = 1, col_names = TRUE))
+upregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet =  2, col_names = TRUE))
+downregulated_bio_filtered <- as.data.frame(read_excel(file_to_open, sheet = 4, col_names = TRUE))
+downregulated_mol_filtered <- as.data.frame(read_excel(file_to_open, sheet = 3, col_names = TRUE))
 
 #up mol filtered terms
 
@@ -823,3 +823,24 @@ write.xlsx(final_names_down_bio, "Supplemental_Table_GO_terms.xlsx", sheetName =
 
 
 
+########################################################
+
+# check glycoltic terms for reviewer during review process
+
+#########################################################
+
+# pull glytoitc process hits in processed file
+filehold <- replot_bio_terms[grepl('glycolytic', replot_bio_terms$Ontology.Term.Name),]
+
+# collct all bio terms from origin analysis before filtering + filter for hit for protein tags from above anaylsis
+original_file <- rbind(total_names_up_bio, total_names_down_bio)
+filehold_original_filtered <- colnames(original_file)
+for (i in 1:nrow(filehold)){
+  temp_df <- original_file[grepl(as.character(filehold[i,1]), original_file$`Protein Phytozome identifier`),]
+  filehold_original_filtered <- rbind(filehold_original_filtered, temp_df)
+}
+
+write.xlsx(filehold, file = "Check_glycotylic_processes.xlsx", sheetName = "Filtered", col.names = TRUE, row.names = TRUE, append = FALSE)
+write.xlsx(filehold_original_filtered, file = "Check_glycotylic_processes.xlsx", sheetName = "Original_Unfiltered", col.names = TRUE, row.names = TRUE, append = TRUE)
+
+close(file("Check_glycotylic_processes.xlsx"))
