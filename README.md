@@ -9,7 +9,7 @@ Jessica Y. Franco<sup>1</sup>, Shree P. Thapa<sup>1</sup>, Zhiqian Pang<sup>2</s
 
 -----------------------
 
-Purpose: The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
+**Purpose:** The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
 
 
 
