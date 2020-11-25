@@ -7,6 +7,10 @@ Jessica Y. Franco<sup>1</sup>, Shree P. Thapa<sup>1</sup>, Zhiqian Pang<sup>2</s
 <sup>2</sup>Citrus Research and Education Center, University of Florida, Lake Alfred, USA <br />
 <sup>3</sup>Citrus Center, Texas A&M University, Weslaco, Texas, USA <br />
 
+
+#### Paper can be found on bioRxiv ([here](https://doi.org/10.1101/2020.04.05.025718))
+
+
 -----------------------
 
 **Purpose:** The script in this repository is for processing and ploting z-scores from total proteomic data as well as Go-terms (Gene Ontology). If you have any questions, concerns, or found a bug, please contact me at dmstev@ucdavis.edu.
@@ -37,8 +41,4 @@ NOTE: There is one known problem with the script. On occasion, I have had issues
 ![](Supplemental_Figure_GO_Terms_pipeline/Supplemental_Figure_GO_Terms_pipeline.png)
 
 &nbsp;
-
-#### Paper can be found on bioRxiv ([here](https://doi.org/10.1101/2020.04.05.025718))
-
-
 
